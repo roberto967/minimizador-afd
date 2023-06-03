@@ -6,6 +6,8 @@ int main()
     Afd automato;
 
     automato.lerTransicoes("input_AFD.txt");
+    cout << "alooo" << endl;
+    automato.criarImagem();
 
     string cadeia;
     cout << "Digite uma cadeia de caracteres: ";
@@ -15,7 +17,7 @@ int main()
 
     if (aceita)
     {
-        cout << "Cadeia aceita pelo autômato." << endl;
+        cout << "Cadeia aceita pelo automato." << endl;
     }
     else
     {

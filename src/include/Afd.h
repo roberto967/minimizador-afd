@@ -24,6 +24,7 @@ public:
 
     void lerTransicoes(const string &arquivo);
     bool verificarCadeia(const string &cadeia);
+    void criarImagem();
 };
 
 #endif
