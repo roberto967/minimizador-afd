@@ -93,6 +93,27 @@ void Afd::lerTransicoes(const string &arquivo)
     file.close();
 }
 
+unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
+{
+    unordered_map<string, vector<pair<string, string>>> transicoesPorSimbolo;
+
+    for (const auto &transicao : transicoes)
+    {
+        const string &estadoAtual = transicao.first;
+        const vector<pair<string, string>> &transicoesEstado = transicao.second;
+
+        for (const auto &transicaoEstado : transicoesEstado)
+        {
+            const string &estadoDestino = transicaoEstado.first;
+            const string &simbolo = transicaoEstado.second;
+
+            transicoesPorSimbolo[simbolo].push_back(make_pair(estadoAtual, estadoDestino));
+        }
+    }
+
+    return transicoesPorSimbolo;
+}
+
 bool Afd::verificarCadeia(const string &cadeia)
 {
     string estado_atual = inicial;
@@ -209,4 +230,190 @@ void Afd::criarImagem()
     // Gera a imagem usando o Graphviz
     string comando = "dot -Tpng " + arquivo_saida + ".dot -o " + arquivo_saida + ".png";
     system(comando.c_str());
+}
+
+const vector<pair<string, string>> &Afd::getTransicoes(const string &estado)
+{
+    return transicoes[estado];
+}
+
+#include <iomanip> // Biblioteca para espaçamento
+#include <typeinfo>
+
+Afd Afd::minimizarDFA()
+{
+    // Etapa 1: Crie os pares de todos os estados envolvidos
+    vector<vector<bool>> marcados(estados.size(), vector<bool>(estados.size(), false));
+
+    // Etapa 2: Marque todos os pares (Qa, Qb) onde Qa é final e Qb não é final
+    for (size_t i = 0; i < estados.size(); i++)
+    {
+        for (size_t j = 0; j < estados.size(); j++)
+        {
+            if ((find(finais.begin(), finais.end(), estados[i]) != finais.end() && find(finais.begin(), finais.end(), estados[j]) == finais.end()) ||
+                (find(finais.begin(), finais.end(), estados[i]) == finais.end() && find(finais.begin(), finais.end(), estados[j]) != finais.end()))
+            {
+                marcados[i][j] = true;
+            }
+        }
+    }
+
+    // Imprimir a matriz marcados com os estados na lateral usando a biblioteca iomanip
+    cout << "   ";
+    for (const string &estado : estados)
+    {
+        cout << setw(3) << estado;
+    }
+    cout << "\n";
+
+    for (size_t i = 0; i < estados.size(); i++)
+    {
+        cout << setw(3) << estados[i];
+        for (size_t j = 0; j < estados.size(); j++)
+        {
+            cout << setw(3) << (marcados[i][j] ? "X" : " ");
+        }
+        cout << "\n";
+    }
+
+    cout << "=======================================" << endl;
+    // cout << transicoes["q1"][]
+
+    for (const auto &transicao : transicoes["q1"])
+    {
+        string estadoDestino = transicao.first;
+        string simbolo = transicao.second;
+
+        cout << "q1"
+             << "-" << simbolo << "->" << estadoDestino << endl;
+    }
+
+    // Etapa 3: Repita até não serem feitas mais marcações
+    bool feito = false;
+    while (!feito)
+    {
+        feito = true;
+
+        for (size_t i = 0; i < estados.size(); i++)
+        {
+            for (size_t j = 0; j < estados.size(); j++)
+            {
+                if (!marcados[i][j])
+                {
+                    for (const string &simbolo : alfabeto)
+                    {
+                        const vector<pair<string, string>> &transicoesEstado1 = getTransicoes(estados[i]);
+                        const vector<pair<string, string>> &transicoesEstado2 = getTransicoes(estados[j]);
+
+                        // Verificar se os estados possuem transições para o símbolo atual
+                        if (!transicoesEstado1.empty() && !transicoesEstado2.empty())
+                        {
+                            const string &proximoEstado1 = transicoesEstado1[0].first;
+                            const string &proximoEstado2 = transicoesEstado2[0].first;
+
+                            size_t index1 = distance(estados.begin(), find(estados.begin(), estados.end(), proximoEstado1));
+                            size_t index2 = distance(estados.begin(), find(estados.begin(), estados.end(), proximoEstado2));
+
+                            if (marcados[index1][index2])
+                            {
+                                marcados[i][j] = true;
+                                feito = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cout << "__________depois do passo 3___________" << endl;
+    cout << "   ";
+    for (const string &estado : estados)
+    {
+        cout << setw(3) << estado;
+    }
+    cout << "\n";
+
+    for (size_t i = 0; i < estados.size(); i++)
+    {
+        cout << setw(3) << estados[i];
+        for (size_t j = 0; j < estados.size(); j++)
+        {
+            cout << setw(3) << (marcados[i][j] ? "X" : " ");
+        }
+        cout << "\n";
+    }
+
+    // Etapa 4: Combine os pares não marcados em um único estado no DFA minimizado
+    Afd dfaMinimizado;
+
+    vector<bool> visitado(estados.size(), false);
+
+    for (size_t i = 0; i < estados.size(); i++)
+    {
+        if (!visitado[i])
+        {
+            string novoEstado = estados[i];
+
+            for (size_t j = i + 1; j < estados.size(); j++)
+            {
+                if (!visitado[j] && !marcados[j][i])
+                { // Considera apenas o triângulo inferior
+                    novoEstado += estados[j];
+                    visitado[j] = true;
+                }
+            }
+
+            dfaMinimizado.estados.push_back(novoEstado);
+
+            if (novoEstado.find(inicial) != string::npos)
+            {
+                dfaMinimizado.inicial = novoEstado;
+            }
+
+            for (const string &estadoFinal : finais)
+            {
+                if (novoEstado.find(estadoFinal) != string::npos)
+                {
+                    dfaMinimizado.finais.push_back(novoEstado);
+                    break;
+                }
+            }
+
+            //parte com erro
+            for (const auto &transicao : transicoes)
+            {
+                const string &simbolo = transicao.first;
+                vector<pair<string, string>> novasTransicoes;
+
+                for (size_t k = 0; k < novoEstado.size(); k++)
+                {
+                    string estado = string(1, novoEstado[k]);
+
+                    // Acessar as transições do estado atual
+                    const vector<pair<string, string>> &estadoTransicoes = transicoes[estado];
+
+                    // Encontrar o índice correspondente ao estado atual combinado
+                    size_t index = distance(estados.begin(), find(estados.begin(), estados.end(), estado));
+
+                    // Adicionar a transição correspondente ao estado atual combinado
+                    novasTransicoes.push_back(estadoTransicoes[index]);
+                }
+
+                // Atualizar as transições do DFA minimizado
+                dfaMinimizado.transicoes[simbolo] = novasTransicoes;
+            }
+        }
+    }
+
+    // for (auto final : dfaMinimizado.finais)
+    // {
+    //     cout << final << endl;
+    // }
+
+    return dfaMinimizado;
+
+    // Retornar um objeto Afd vazio por enquanto
+    return Afd();
 }

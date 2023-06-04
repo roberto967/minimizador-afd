@@ -9,20 +9,23 @@ int main()
     cout << "alooo" << endl;
     automato.criarImagem();
 
-    string cadeia;
-    cout << "Digite uma cadeia de caracteres: ";
-    cin >> cadeia;
+    // string cadeia;
+    // cout << "Digite uma cadeia de caracteres: ";
+    // cin >> cadeia;
 
-    bool aceita = automato.verificarCadeia(cadeia);
+    Afd dfaMinimizado = automato.minimizarDFA();
+    dfaMinimizado.criarImagem();
 
-    if (aceita)
-    {
-        cout << "Cadeia aceita pelo automato." << endl;
-    }
-    else
-    {
-        cout << "Cadeia rejeitada pelo autômato." << endl;
-    }
+    //bool aceita = automato.verificarCadeia(cadeia);
+
+    // if (aceita)
+    // {
+    //     cout << "Cadeia aceita pelo automato." << endl;
+    // }
+    // else
+    // {
+    //     cout << "Cadeia rejeitada pelo autômato." << endl;
+    // }
 
     return 0;
 }
