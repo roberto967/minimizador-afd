@@ -91,6 +91,48 @@ void Afd::lerTransicoes(const string &arquivo)
     }
 
     file.close();
+    preencherMatrizTransicoes();
+}
+
+vector<string> Afd::splitEstadoMinimizado(const string &estadoMinimizado)
+{
+    vector<string> estadosOriginais;
+    string estadoOriginal;
+
+    for (char c : estadoMinimizado)
+    {
+        if (c == 'E') // Separador de estados originais
+        {
+            if (!estadoOriginal.empty())
+            {
+                estadosOriginais.push_back(estadoOriginal);
+                estadoOriginal.clear();
+            }
+        }
+        else
+        {
+            estadoOriginal.push_back(c);
+        }
+    }
+
+    if (!estadoOriginal.empty())
+    {
+        estadosOriginais.push_back(estadoOriginal);
+    }
+
+    return estadosOriginais;
+}
+
+string Afd::obterEstadoCombinado(const vector<string> &estadosOriginais)
+{
+    string estadoCombinado;
+
+    for (const string &estado : estadosOriginais)
+    {
+        estadoCombinado += estado;
+    }
+
+    return estadoCombinado;
 }
 
 unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
@@ -354,7 +396,7 @@ Afd Afd::minimizarDFA()
     {
         if (!visitado[i])
         {
-            string novoEstado = estados[i];
+            string novoEstado = estados[i] + "E";
 
             for (size_t j = i + 1; j < estados.size(); j++)
             {
@@ -363,6 +405,11 @@ Afd Afd::minimizarDFA()
                     novoEstado += estados[j];
                     visitado[j] = true;
                 }
+            }
+
+            if (!novoEstado.empty() && novoEstado.back() == 'E')
+            {
+                novoEstado = novoEstado.substr(0, novoEstado.size() - 1);
             }
 
             dfaMinimizado.estados.push_back(novoEstado);
@@ -380,40 +427,67 @@ Afd Afd::minimizarDFA()
                     break;
                 }
             }
-
-            //parte com erro
-            for (const auto &transicao : transicoes)
-            {
-                const string &simbolo = transicao.first;
-                vector<pair<string, string>> novasTransicoes;
-
-                for (size_t k = 0; k < novoEstado.size(); k++)
-                {
-                    string estado = string(1, novoEstado[k]);
-
-                    // Acessar as transições do estado atual
-                    const vector<pair<string, string>> &estadoTransicoes = transicoes[estado];
-
-                    // Encontrar o índice correspondente ao estado atual combinado
-                    size_t index = distance(estados.begin(), find(estados.begin(), estados.end(), estado));
-
-                    // Adicionar a transição correspondente ao estado atual combinado
-                    novasTransicoes.push_back(estadoTransicoes[index]);
-                }
-
-                // Atualizar as transições do DFA minimizado
-                dfaMinimizado.transicoes[simbolo] = novasTransicoes;
-            }
         }
     }
 
-    // for (auto final : dfaMinimizado.finais)
-    // {
-    //     cout << final << endl;
-    // }
+    imprimirMatrizTransicoes();
 
     return dfaMinimizado;
+}
 
-    // Retornar um objeto Afd vazio por enquanto
-    return Afd();
+void Afd::preencherMatrizTransicoes()
+{
+    matrizTransicoes.resize(estados.size(), vector<string>(alfabeto.size(), ""));
+
+    for (size_t i = 0; i < estados.size(); i++)
+    {
+        for (size_t j = 0; j < alfabeto.size(); j++)
+        {
+            string estadoOrigem = estados[i];
+            string simbolo = alfabeto[j];
+
+            if (transicoes.find(estadoOrigem) != transicoes.end())
+            {
+                const vector<pair<string, string>> &estadoTransicoes = transicoes.at(estadoOrigem);
+
+                for (const auto &transicao : estadoTransicoes)
+                {
+                    if (transicao.second == simbolo)
+                    {
+                        string estadoDestino = transicao.first;
+                        matrizTransicoes[i][j] = estadoDestino;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Função para visualizar a matriz de transições
+void Afd::imprimirMatrizTransicoes()
+{
+    // Imprimir cabeçalho da matriz com os símbolos do alfabeto
+    std::cout << std::setw(6) << "Estado";
+    for (const auto &simbolo : alfabeto)
+    {
+        std::cout << std::setw(6) << simbolo;
+    }
+    std::cout << std::endl;
+
+    // Imprimir as transições de cada estado na matriz
+    for (std::size_t i = 0; i < estados.size(); i++)
+    {
+        std::cout << std::setw(6) << estados[i];
+        for (std::size_t j = 0; j < alfabeto.size(); j++)
+        {
+            std::cout << std::setw(6) << matrizTransicoes[i][j];
+        }
+        std::cout << std::endl;
+    }
+}
+
+vector<string> Afd::getEstados() const
+{
+    return estados;
 }

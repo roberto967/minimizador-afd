@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <unordered_map>
 
 using namespace std;
 
@@ -20,6 +21,8 @@ private:
     vector<string> finais;
     unordered_map<string, vector<pair<string, string>>> transicoes;
 
+    vector<vector<string>> matrizTransicoes;
+
 public:
     Afd();
     ~Afd();
@@ -31,6 +34,12 @@ public:
     Afd minimizarDFA();
     const vector<pair<string, string>> &getTransicoes(const string &estado);
     unordered_map<string, vector<pair<string, string>>> getTransicoesPorSimbolo();
+
+    void preencherMatrizTransicoes();
+    void imprimirMatrizTransicoes();
+    vector<string> splitEstadoMinimizado(const string &estadoMinimizado);
+    string obterEstadoCombinado(const vector<string> &estadosOriginais);
+    vector<string> getEstados() const;
     // int indiceDoEstado(const string &estado);
 };
 
