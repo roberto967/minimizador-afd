@@ -88,10 +88,13 @@ void Afd::lerTransicoes(const string &arquivo)
         string simbolo = tokens[2];
 
         transicoes[estado_atual].push_back(make_pair(estado_destino, simbolo));
+
+        vector<string> transicao = {estado_atual, simbolo, estado_destino};
+        matrizTransicoes.push_back(transicao);
     }
 
     file.close();
-    preencherMatrizTransicoes();
+    //preencherMatrizTransicoes();
 }
 
 unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
@@ -257,7 +260,7 @@ Afd Afd::minimizarDFA()
         }
     }
 
-    // Imprimir a matriz marcados com os estados na lateral usando a biblioteca iomanip
+    // Imprimir a matriz marcados com os estados na lateral usando a biblioteca iomanip pra espaçamento
     cout << "   ";
     for (const string &estado : estados)
     {
@@ -379,60 +382,22 @@ Afd Afd::minimizarDFA()
         }
     }
 
-    // imprimirMatrizTransicoes();
-    dfaMinimizado.preencherMatrizTransicoes();
-    dfaMinimizado.imprimirMatrizTransicoes();
+    imprimirMatrizTransicoes();
+    // dfaMinimizado.preencherMatrizTransicoes();
+    // dfaMinimizado.imprimirMatrizTransicoes();
 
     return dfaMinimizado;
-}
-
-void Afd::preencherMatrizTransicoes()
-{
-    matrizTransicoes.resize(estados.size(), vector<string>(alfabeto.size(), ""));
-
-    for (size_t i = 0; i < estados.size(); i++)
-    {
-        for (size_t j = 0; j < alfabeto.size(); j++)
-        {
-            string estadoOrigem = estados[i];
-            string simbolo = alfabeto[j];
-
-            if (transicoes.find(estadoOrigem) != transicoes.end())
-            {
-                const vector<pair<string, string>> &estadoTransicoes = transicoes.at(estadoOrigem);
-
-                for (const auto &transicao : estadoTransicoes)
-                {
-                    if (transicao.second == simbolo)
-                    {
-                        string estadoDestino = transicao.first;
-                        matrizTransicoes[i][j] = estadoDestino;
-                        break;
-                    }
-                }
-            }
-        }
-    }
 }
 
 // Função para visualizar a matriz de transições
 void Afd::imprimirMatrizTransicoes()
 {
-    // Imprimir cabeçalho da matriz com os símbolos do alfabeto
-    cout << setw(6) << "Estado";
-    for (const auto &simbolo : alfabeto)
-    {
-        cout << setw(6) << simbolo;
-    }
-    cout << endl;
-
     // Imprimir as transições de cada estado na matriz
-    for (size_t i = 0; i < estados.size(); i++)
+    for (size_t i = 0; i < matrizTransicoes.size(); i++)
     {
-        cout << setw(6) << estados[i];
-        for (size_t j = 0; j < alfabeto.size(); j++)
+        for (size_t j = 0; j < matrizTransicoes[i].size(); j++)
         {
-            cout << setw(6) << matrizTransicoes[i][j];
+            cout << matrizTransicoes[i][j] << " ";
         }
         cout << endl;
     }
