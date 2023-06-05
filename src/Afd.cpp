@@ -94,55 +94,6 @@ void Afd::lerTransicoes(const string &arquivo)
     preencherMatrizTransicoes();
 }
 
-vector<string> Afd::splitEstadoMinimizado(const string &estadoMinimizado)
-{
-    vector<string> estadosOriginais;
-    string estadoOriginal;
-
-    for (char c : estadoMinimizado)
-    {
-        if (c == 'E') // Separador de estados originais
-        {
-            if (!estadoOriginal.empty())
-            {
-                estadosOriginais.push_back(estadoOriginal);
-                estadoOriginal.clear();
-            }
-        }
-        else
-        {
-            estadoOriginal.push_back(c);
-        }
-    }
-
-    if (!estadoOriginal.empty())
-    {
-        estadosOriginais.push_back(estadoOriginal);
-    }
-
-    return estadosOriginais;
-}
-
-string Afd::obterEstadoCombinado(const vector<string> &estadosOriginais)
-{
-    vector<string> estadosOrdenados = estadosOriginais;
-    sort(estadosOrdenados.begin(), estadosOrdenados.end());
-
-    string estadoCombinado;
-    for (size_t i = 0; i < estadosOrdenados.size(); ++i)
-    {
-        estadoCombinado += estadosOrdenados[i];
-
-        // Adicione o símbolo "E" apenas se não for o último estado original
-        if (i < estadosOrdenados.size() - 1)
-        {
-            estadoCombinado += "E";
-        }
-    }
-
-    return estadoCombinado;
-}
-
 unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
 {
     unordered_map<string, vector<pair<string, string>>> transicoesPorSimbolo;
@@ -399,7 +350,7 @@ Afd Afd::minimizarDFA()
     {
         if (!visitado[i])
         {
-            string novoEstado = estados[i] + "E";
+            string novoEstado = estados[i];
 
             for (size_t j = i + 1; j < estados.size(); j++)
             {
@@ -408,11 +359,6 @@ Afd Afd::minimizarDFA()
                     novoEstado += estados[j];
                     visitado[j] = true;
                 }
-            }
-
-            if (!novoEstado.empty() && novoEstado.back() == 'E')
-            {
-                novoEstado = novoEstado.substr(0, novoEstado.size() - 1);
             }
 
             dfaMinimizado.estados.push_back(novoEstado);
@@ -431,104 +377,6 @@ Afd Afd::minimizarDFA()
                 }
             }
         }
-    }
-
-    unordered_map<string, vector<pair<string, string>>> transicoesUnido;
-    
-    for (const string &estadoUnido : dfaMinimizado.estados)
-    {
-        vector<string> estadosOriginais = splitEstadoMinimizado(estadoUnido);
-
-        // Crie uma estrutura para armazenar as transições do estado unido
-        vector<pair<string, string>> transicoesEstadoUnido;
-
-        // Percorra os símbolos do alfabeto
-        for (const string &simbolo : dfaMinimizado.alfabeto)
-        {
-            // Crie uma estrutura para armazenar os próximos estados unidos alcançados pelo símbolo
-            vector<string> proximosEstadosUnidos;
-
-            // Percorra os estados originais
-            for (const string &estadoOriginal : estadosOriginais)
-            {
-                // Verifique se o estado original tem transições para o símbolo atual
-                if (transicoes.count(estadoOriginal) > 0)
-                {
-                    // Obtenha as transições do estado original no DFA original
-                    const vector<pair<string, string>> &transicoesEstadoOriginal = transicoes[estadoOriginal];
-
-                    // Percorra as transições do estado original
-                    for (const auto &transicao : transicoesEstadoOriginal)
-                    {
-                        // Verifique se a transição ocorre com o símbolo atual
-                        if (transicao.second == simbolo)
-                        {
-                            // Obtenha o próximo estado original alcançado pelo símbolo
-                            const string &proximoEstadoOriginal = transicao.first;
-
-                            // Verifique se o próximo estado original está minimizado
-                            if (isMinimizado(proximoEstadoOriginal))
-                            {
-                                // O próximo estado original é um estado minimizado
-                                // Obtenha o estado unido correspondente ao próximo estado original
-                                string proximoEstadoUnido = obterEstadoCombinado({proximoEstadoOriginal});
-
-                                // Adicione o próximo estado unido à lista
-                                proximosEstadosUnidos.push_back(proximoEstadoUnido);
-                            }
-                            else
-                            {
-                                // O próximo estado original não é um estado minimizado
-                                // Adicione o próximo estado original à lista, se ainda não estiver presente
-                                if (find(proximosEstadosUnidos.begin(), proximosEstadosUnidos.end(), proximoEstadoOriginal) == proximosEstadosUnidos.end())
-                                {
-                                    proximosEstadosUnidos.push_back(proximoEstadoOriginal);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Verifique se há próximos estados unidos alcançados pelo símbolo
-            if (!proximosEstadosUnidos.empty())
-            {
-                // Combine os próximos estados unidos em um único estado unido
-                string proximoEstadoUnido = obterEstadoCombinado(proximosEstadosUnidos);
-
-                // Adicione a transição do estado unido atual para o próximo estado unido ao vetor de transições do estado unido
-                transicoesEstadoUnido.push_back({proximoEstadoUnido, simbolo});
-            }
-        }
-
-        // Adicione as transições do estado unido ao mapa de transições unidas
-        transicoesUnido[estadoUnido] = transicoesEstadoUnido;
-    }
-
-    for (auto min : dfaMinimizado.estados)
-    {
-        cout << min << " " << isMinimizado(min) << endl;
-    }
-
-    dfaMinimizado.transicoes = transicoesUnido;
-
-    for (const auto &par : transicoesUnido)
-    {
-        const string &estadoUnido = par.first;
-        const vector<pair<string, string>> &transicoesEstadoUnido = par.second;
-
-        cout << "Estado unido: " << estadoUnido << endl;
-        cout << "Transicoes:" << endl;
-
-        for (const auto &transicao : transicoesEstadoUnido)
-        {
-            const string &simbolo = transicao.first;
-            const string &proximoEstado = transicao.second;
-
-            cout << "Simbolo: " << simbolo << " => Proximo estado: " << proximoEstado << endl;
-        }
-
-        cout << endl;
     }
 
     // imprimirMatrizTransicoes();
@@ -588,14 +436,4 @@ void Afd::imprimirMatrizTransicoes()
         }
         cout << endl;
     }
-}
-
-vector<string> Afd::getEstados() const
-{
-    return estados;
-}
-
-bool Afd::isMinimizado(const string estado)
-{
-    return estado.find('E') != string::npos;
 }

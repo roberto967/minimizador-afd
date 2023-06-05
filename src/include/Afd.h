@@ -39,11 +39,6 @@ public:
 
     void preencherMatrizTransicoes();
     void imprimirMatrizTransicoes();
-    vector<string> splitEstadoMinimizado(const string &estadoMinimizado);
-    string obterEstadoCombinado(const vector<string> &estadosOriginais);
-    vector<string> getEstados() const;
-
-    bool isMinimizado(const string estado);
 };
 
 #endif
