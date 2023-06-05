@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <unordered_map>
 #include <iomanip>
-#include <typeinfo>
 
 using namespace std;
 
