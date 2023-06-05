@@ -9,12 +9,15 @@
 #include <unordered_set>
 #include <algorithm>
 #include <unordered_map>
+#include <iomanip>
+#include <typeinfo>
 
 using namespace std;
 
 class Afd
 {
 private:
+public:
     vector<string> alfabeto;
     vector<string> estados;
     string inicial;
@@ -23,7 +26,6 @@ private:
 
     vector<vector<string>> matrizTransicoes;
 
-public:
     Afd();
     ~Afd();
 
@@ -40,7 +42,8 @@ public:
     vector<string> splitEstadoMinimizado(const string &estadoMinimizado);
     string obterEstadoCombinado(const vector<string> &estadosOriginais);
     vector<string> getEstados() const;
-    // int indiceDoEstado(const string &estado);
+
+    bool isMinimizado(const string estado);
 };
 
 #endif
