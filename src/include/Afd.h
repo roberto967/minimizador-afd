@@ -36,7 +36,6 @@ public:
     const vector<pair<string, string>> &getTransicoes(const string &estado);
     unordered_map<string, vector<pair<string, string>>> getTransicoesPorSimbolo();
 
-    void preencherMatrizTransicoes();
     void imprimirMatrizTransicoes();
 };
 
