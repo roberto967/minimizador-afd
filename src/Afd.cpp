@@ -97,27 +97,6 @@ void Afd::lerTransicoes(const string &arquivo)
     // preencherMatrizTransicoes();
 }
 
-unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
-{
-    unordered_map<string, vector<pair<string, string>>> transicoesPorSimbolo;
-
-    for (const auto &transicao : transicoes)
-    {
-        const string &estadoAtual = transicao.first;
-        const vector<pair<string, string>> &transicoesEstado = transicao.second;
-
-        for (const auto &transicaoEstado : transicoesEstado)
-        {
-            const string &estadoDestino = transicaoEstado.first;
-            const string &simbolo = transicaoEstado.second;
-
-            transicoesPorSimbolo[simbolo].push_back(make_pair(estadoAtual, estadoDestino));
-        }
-    }
-
-    return transicoesPorSimbolo;
-}
-
 bool Afd::verificarCadeia(const string &cadeia)
 {
     string estado_atual = inicial;

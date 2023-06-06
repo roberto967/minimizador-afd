@@ -30,11 +30,12 @@ public:
 
     void lerTransicoes(const string &arquivo);
     bool verificarCadeia(const string &cadeia);
+
     void criarImagem(const string arquivo_saida);
 
     Afd minimizarDFA();
+
     const vector<pair<string, string>> &getTransicoes(const string &estado);
-    unordered_map<string, vector<pair<string, string>>> getTransicoesPorSimbolo();
 
     void imprimirMatrizTransicoes();
 };
