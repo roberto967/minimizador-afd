@@ -94,7 +94,7 @@ void Afd::lerTransicoes(const string &arquivo)
     }
 
     file.close();
-    //preencherMatrizTransicoes();
+    // preencherMatrizTransicoes();
 }
 
 unordered_map<string, vector<pair<string, string>>> Afd::getTransicoesPorSimbolo()
@@ -340,25 +340,31 @@ Afd Afd::minimizarDFA()
     // Etapa 4: Combine os pares não marcados em um único estado no DFA minimizado
     Afd dfaMinimizado;
 
-    for (auto simbolo : alfabeto) // Copiando alfabeto para o afd minimizado
-    {
-        dfaMinimizado.alfabeto.push_back(simbolo);
-    }
-
-    dfaMinimizado.transicoes = this->transicoes;
+    dfaMinimizado.alfabeto = this->alfabeto; // Copiando alfabeto para o afd minimizado
+    
 
     vector<bool> visitado(estados.size(), false);
+
+    vector<vector<string>> juntou;
 
     for (size_t i = 0; i < estados.size(); i++)
     {
         if (!visitado[i])
         {
+            vector<string> colocarJuntou;
             string novoEstado = estados[i];
+
+            if (find(colocarJuntou.begin(), colocarJuntou.end(), novoEstado) == colocarJuntou.end())
+            {
+                // O estado não está presente, adicionar ao vetor
+                colocarJuntou.push_back(novoEstado);
+            }
 
             for (size_t j = i + 1; j < estados.size(); j++)
             {
-                if (!visitado[j] && !marcados[j][i])
-                { // Considera apenas o triângulo inferior
+                if (!visitado[j] && !marcados[j][i]) // Considera apenas o triângulo inferior
+                {
+                    colocarJuntou.push_back(estados[j]);
                     novoEstado += estados[j];
                     visitado[j] = true;
                 }
@@ -379,12 +385,74 @@ Afd Afd::minimizarDFA()
                     break;
                 }
             }
+
+            juntou.push_back(colocarJuntou);
         }
     }
 
-    imprimirMatrizTransicoes();
-    // dfaMinimizado.preencherMatrizTransicoes();
-    // dfaMinimizado.imprimirMatrizTransicoes();
+    for (const vector<string> &estadosJuntos : juntou)
+    {
+        string estadoAtualOriginal = estadosJuntos[0];
+        string estadoAtualMinimizado;
+
+        for (const string &estado : estadosJuntos)
+        {
+            estadoAtualMinimizado += estado;
+        }
+
+        unordered_map<string, string> mapeamentoDestinos; // Mapeamento dos estados de destino
+
+        for (const string &simbolo : dfaMinimizado.alfabeto)
+        {
+            vector<pair<string, string>> transicoesOriginais = transicoes[estadoAtualOriginal];
+            string estadoDestinoOriginal;
+
+            for (const auto &transicao : transicoesOriginais)
+            {
+                if (transicao.second == simbolo)
+                {
+                    estadoDestinoOriginal = transicao.first;
+                    break;
+                }
+            }
+
+            string estadoDestinoMinimizado;
+
+            for (const vector<string> &outrosEstadosJuntos : juntou)
+            {
+                string linhaJuntou;
+                for (const string &estado : outrosEstadosJuntos)
+                {
+                    linhaJuntou += estado;
+                }
+
+                if (linhaJuntou.find(estadoDestinoOriginal) != string::npos)
+                {
+                    estadoDestinoMinimizado = linhaJuntou;
+                    break;
+                }
+            }
+
+            mapeamentoDestinos[simbolo] = estadoDestinoMinimizado;
+        }
+
+        for (const auto &par : mapeamentoDestinos)
+        {
+            vector<string> transicaoMinimizada = {estadoAtualMinimizado, par.first, par.second};
+            dfaMinimizado.matrizTransicoes.push_back(transicaoMinimizada);
+        }
+    }
+
+    for (const vector<string> &transicao : dfaMinimizado.matrizTransicoes)
+    {
+        string estadoAtual = transicao[0];
+        string simbolo = transicao[1];
+        string estadoDestino = transicao[2];
+
+        dfaMinimizado.transicoes[estadoAtual].push_back(make_pair(estadoDestino, simbolo));
+    }
+
+    dfaMinimizado.imprimirMatrizTransicoes();
 
     return dfaMinimizado;
 }
@@ -392,7 +460,6 @@ Afd Afd::minimizarDFA()
 // Função para visualizar a matriz de transições
 void Afd::imprimirMatrizTransicoes()
 {
-    // Imprimir as transições de cada estado na matriz
     for (size_t i = 0; i < matrizTransicoes.size(); i++)
     {
         for (size_t j = 0; j < matrizTransicoes[i].size(); j++)
