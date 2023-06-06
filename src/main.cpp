@@ -7,16 +7,16 @@ int main()
 
     automato.lerTransicoes("input_AFD.txt");
     cout << "alooo" << endl;
-    automato.criarImagem();
+    automato.criarImagem("Afd_Original");
 
     // string cadeia;
     // cout << "Digite uma cadeia de caracteres: ";
     // cin >> cadeia;
 
     Afd dfaMinimizado = automato.minimizarDFA();
-    dfaMinimizado.criarImagem();
+    dfaMinimizado.criarImagem("Afd_Minimizado");
 
-    //bool aceita = automato.verificarCadeia(cadeia);
+    // bool aceita = automato.verificarCadeia(cadeia);
 
     // if (aceita)
     // {

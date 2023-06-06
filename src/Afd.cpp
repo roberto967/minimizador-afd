@@ -174,10 +174,8 @@ bool Afd::verificarCadeia(const string &cadeia)
     return estado_final_encontrado;
 }
 
-void Afd::criarImagem()
+void Afd::criarImagem(const string arquivo_saida)
 {
-    string arquivo_saida = "afd";
-
     ofstream file(arquivo_saida + ".dot");
     file << "digraph AFD {" << endl;
 
