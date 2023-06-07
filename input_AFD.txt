@@ -1,7 +1,7 @@
 alfabeto:a,b
 estados:q0,q1,q2,q3,q4,q5
 inicial:q0
-finais:
+finais:q5
 transicoes
 q0,q2,a
 q0,q1,b

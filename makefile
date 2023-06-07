@@ -33,5 +33,5 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 clean:
 	del $(OBJDIR)\*.o
 	del $(TARGET).exe
-	del *.dot
-	del *.png
+	del output\*.dot
+	del output\*.png

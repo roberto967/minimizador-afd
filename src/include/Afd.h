@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -37,7 +38,7 @@ public:
     bool verificarCadeia(const string &cadeia);
     void verificarValidadeAfd();
 
-    void criarImagem(const string arquivo_saida);
+    void criarImagem(const string arquivoSaida);
 
     Afd minimizarDFA();
 

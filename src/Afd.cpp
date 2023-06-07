@@ -33,30 +33,30 @@ void Afd::lerTransicoes(const string &arquivo)
 
         if (chave == "alfabeto")
         {
-            size_t token_pos = 0;
-            while ((token_pos = valor.find(',')) != string::npos)
+            size_t tokenPos = 0;
+            while ((tokenPos = valor.find(',')) != string::npos)
             {
-                string token = valor.substr(0, token_pos);
+                string token = valor.substr(0, tokenPos);
                 this->alfabeto.push_back(token);
-                valor.erase(0, token_pos + 1);
+                valor.erase(0, tokenPos + 1);
             }
             this->alfabeto.push_back(valor);
         }
         else if (chave == "estados")
         {
-            size_t token_pos = 0;
-            while ((token_pos = valor.find(',')) != string::npos)
+            size_t tokenPos = 0;
+            while ((tokenPos = valor.find(',')) != string::npos)
             {
-                string token = valor.substr(0, token_pos);
+                string token = valor.substr(0, tokenPos);
                 this->estados.push_back(token);
-                valor.erase(0, token_pos + 1);
+                valor.erase(0, tokenPos + 1);
             }
             estados.push_back(valor);
         }
         else if (chave == "inicial")
         {
-            size_t comma_pos = valor.find(',');
-            if (comma_pos != string::npos)
+            size_t commaPos = valor.find(',');
+            if (commaPos != string::npos)
             {
                 throw runtime_error("Erro: Mais de um estado inicial declarado.");
             }
@@ -64,12 +64,12 @@ void Afd::lerTransicoes(const string &arquivo)
         }
         else if (chave == "finais")
         {
-            size_t token_pos = 0;
-            while ((token_pos = valor.find(',')) != string::npos)
+            size_t tokenPos = 0;
+            while ((tokenPos = valor.find(',')) != string::npos)
             {
-                string token = valor.substr(0, token_pos);
+                string token = valor.substr(0, tokenPos);
                 this->finais.push_back(token);
-                valor.erase(0, token_pos + 1);
+                valor.erase(0, tokenPos + 1);
             }
             trimString(valor);
             this->finais.push_back(valor);
@@ -91,13 +91,13 @@ void Afd::lerTransicoes(const string &arquivo)
 
         tokens.push_back(linha);
 
-        string estado_atual = tokens[0];
-        string estado_destino = tokens[1];
+        string estadoAtual = tokens[0];
+        string estadoDestino = tokens[1];
         string simbolo = tokens[2];
 
-        this->transicoes[estado_atual].push_back(make_pair(estado_destino, simbolo));
+        this->transicoes[estadoAtual].push_back(make_pair(estadoDestino, simbolo));
 
-        this->matrizTransicoes.push_back({estado_atual, simbolo, estado_destino});
+        this->matrizTransicoes.push_back({estadoAtual, simbolo, estadoDestino});
     }
 
     file.close();
@@ -118,7 +118,7 @@ void Afd::verificarValidadeAfd()
         this->finais.push_back(" ");
     }
 
-    // Verifica se todas as letras do alfabeto têm transições definidas para cada estado
+    // Verifica se todas as letras do alfabeto tem transições definidas para cada estado
     for (const auto &estado : this->estados)
     {
         for (const auto &simbolo : this->alfabeto)
@@ -156,70 +156,73 @@ void Afd::verificarValidadeAfd()
 
 bool Afd::verificarCadeia(const string &cadeia)
 {
-    string estado_atual = inicial;
+    string estadoAtual = inicial;
 
     for (char simbolo : cadeia)
     {
-        string simbolo_str(1, simbolo);
-        bool transicao_encontrada = false;
+        string simboloStr(1, simbolo);
+        bool transicaoEncontrada = false;
 
         // Verifica se o símbolo lido pertence ao alfabeto do AFD
-        bool simbolo_presente = false;
+        bool simboloPresente = false;
         for (const string &s : alfabeto)
         {
-            if (s == simbolo_str)
+            if (s == simboloStr)
             {
-                simbolo_presente = true;
+                simboloPresente = true;
                 break;
             }
         }
-        if (!simbolo_presente)
+        if (!simboloPresente)
         {
             return false;
         }
 
         // Procura por uma transição apropriada
-        for (const pair<string, string> &transicao : transicoes[estado_atual])
+        for (const pair<string, string> &transicao : transicoes[estadoAtual])
         {
-            if (transicao.second == simbolo_str)
+            if (transicao.second == simboloStr)
             {
-                estado_atual = transicao.first;
-                transicao_encontrada = true;
+                estadoAtual = transicao.first;
+                transicaoEncontrada = true;
                 break;
             }
         }
 
         // Se não houver transição para o símbolo lido, a cadeia é rejeitada
-        if (!transicao_encontrada)
+        if (!transicaoEncontrada)
         {
             return false;
         }
     }
 
     // Verifica se o estado final alcançado está entre os estados finais
-    bool estado_final_encontrado = false;
+    bool estadoFinalEncontrado = false;
     for (const string &estado : finais)
     {
-        if (estado == estado_atual)
+        if (estado == estadoAtual)
         {
-            estado_final_encontrado = true;
+            estadoFinalEncontrado = true;
             break;
         }
     }
 
-    return estado_final_encontrado;
+    return estadoFinalEncontrado;
 }
 
-void Afd::criarImagem(const string arquivo_saida)
+void Afd::criarImagem(const string arquivoSaida)
 {
-    ofstream file(arquivo_saida + ".dot");
+    string arquivoDot = arquivoSaida + ".dot";
+    string arquivoPng = arquivoSaida + ".png";
+
+    ofstream file(arquivoDot);
     file << "digraph AFD {" << endl;
 
     // Configuração do estado final com círculo duplo
     file << "node [shape=circle]; ";
     for (const string &estado : this->finais)
     {
-        if (estado == "" || estado == " ")
+        if (estado == "" || estado == " ") // Não havendo estado final faz nada
         {
         }
         else
@@ -233,16 +236,16 @@ void Afd::criarImagem(const string arquivo_saida)
     file << "node [shape=circle]; ";
     for (const string &estado : this->estados)
     {
-        bool eh_estado_final = false;
-        for (const string &estado_final : this->finais)
+        bool ehEstadoFinal = false;
+        for (const string &estadoFinal : this->finais)
         {
-            if (estado == estado_final)
+            if (estado == estadoFinal)
             {
-                eh_estado_final = true;
+                ehEstadoFinal = true;
                 break;
             }
         }
-        if (!eh_estado_final)
+        if (!ehEstadoFinal)
         {
             file << estado << "; "; // Define o estado normal com círculo simples
         }
@@ -262,9 +265,9 @@ void Afd::criarImagem(const string arquivo_saida)
 
         for (const pair<string, string> &transicao : this->transicoes[estado])
         {
-            string estado_destino = transicao.first;
+            string estadoDestino = transicao.first;
             string simbolo = transicao.second;
-            file << estado << " -> " << estado_destino << " [label=\"" << simbolo << "\"];" << endl;
+            file << estado << " -> " << estadoDestino << " [label=\"" << simbolo << "\"];" << endl;
         }
     }
 
@@ -272,8 +275,23 @@ void Afd::criarImagem(const string arquivo_saida)
     file.close();
 
     // Gera a imagem usando o Graphviz
-    string comando = "dot -Tpng " + arquivo_saida + ".dot -o " + arquivo_saida + ".png";
+    string comando = "dot -Tpng " + arquivoDot + " -o " + arquivoPng;
     system(comando.c_str());
+
+    // Move o arquivo para "output"
+    string novoArquivoDot = "output/" + arquivoDot;
+    string novoArquivoPng = "output/" + arquivoPng;
+
+    // Exclui o arquivo existente, se já existir
+    remove(novoArquivoDot.c_str());
+    remove(novoArquivoPng.c_str());
+
+    // Move o arquivo para "output"
+    rename(arquivoDot.c_str(), novoArquivoDot.c_str());
+    rename(arquivoPng.c_str(), novoArquivoPng.c_str());
+
+    // Exclui o arquivo .dot
+    remove(novoArquivoDot.c_str());
 }
 
 const vector<pair<string, string>> &Afd::getTransicoes(const string &estado)
@@ -296,26 +314,54 @@ void Afd::imprimirMatrizTransicoes()
 void Afd::imprimirMatrizMinimizacao(const vector<vector<bool>> marcados)
 {
     cout << "   ";
+    for (size_t i = 0; i < this->estados.size(); i++)
+    {
+        cout << "+------";
+    }
+    cout << "+" << endl;
+
+    cout << "   ";
     for (const string &estado : this->estados)
     {
-        cout << setw(3) << estado;
+        cout << "|" << setw(6) << estado << "";
     }
-    cout << "\n";
+    cout << "|" << endl;
+
+    cout << "   ";
+    for (size_t i = 0; i < this->estados.size(); i++)
+    {
+        cout << "+------";
+    }
+    cout << "+" << endl;
 
     for (size_t i = 0; i < this->estados.size(); i++)
     {
         cout << setw(3) << this->estados[i];
-        for (size_t j = 0; j <= i; j++) // Considera apenas o triângulo inferior
-        {
-            cout << setw(3) << (marcados[i][j] ? "X" : " ");
+        for (size_t j = 0; j <= i; j++)
+        { // Considera apenas o triângulo inferior
+            cout << "| ";
+            if (marcados[i][j])
+            {
+                cout << " [X] ";
+            }
+            else
+            {
+                cout << " [ ] ";
+            }
         }
-        cout << "\n";
+        cout << "|" << endl;
+
+        cout << "   ";
+        for (size_t k = 0; k < this->estados.size(); k++)
+        {
+            cout << "+------";
+        }
+        cout << "+" << endl;
     }
 }
 
 Afd Afd::minimizarDFA()
 {
-
     // Etapa 1: Crie os pares de todos os estados envolvidos
     vector<vector<bool>> marcados(this->estados.size(), vector<bool>(this->estados.size(), false));
 
@@ -338,9 +384,11 @@ Afd Afd::minimizarDFA()
     {
         feito = true;
 
-        cout << "__________Minimizando...___________" << endl;
+        cout << "\n__________Minimizando...___________\n"
+             << endl;
         imprimirMatrizMinimizacao(marcados);
-        cout << "___________________________________" << endl;
+        cout << "\n___________________________________\n"
+             << endl;
 
         for (size_t i = 0; i < this->estados.size(); i++)
         {
@@ -353,7 +401,7 @@ Afd Afd::minimizarDFA()
                         const vector<pair<string, string>> &transicoesEstado1 = getTransicoes(this->estados[i]);
                         const vector<pair<string, string>> &transicoesEstado2 = getTransicoes(this->estados[j]);
 
-                        // Verificar se os estados possuem transições para o símbolo atual
+                        // Verifica se os estados possuem transições para o símbolo atual
                         bool encontrouMarcado = false;
                         for (const auto &transicao1 : transicoesEstado1)
                         {
@@ -390,9 +438,11 @@ Afd Afd::minimizarDFA()
         }
     }
 
-    cout << "\n=========== Tabela do minimizado =============" << endl;
+    cout << "\n=========== Tabela do minimizado =============\n"
+         << endl;
     imprimirMatrizMinimizacao(marcados);
-    cout << "==============================================" << endl;
+    cout << "\n==============================================\n"
+         << endl;
 
     // Etapa 4: Combine os pares não marcados em um único estado no AFD minimizado
     Afd afdMinimizado;
@@ -401,7 +451,7 @@ Afd Afd::minimizarDFA()
 
     vector<bool> visitado(this->estados.size(), false);
 
-    vector<vector<string>> mNomesUnidos; // Cada linha representa o nome do estado
+    vector<vector<string>> mNomesUnidos; // Cada linha representa o nome do estado do afd minimizado
 
     for (size_t i = 0; i < this->estados.size(); i++)
     {
@@ -459,7 +509,7 @@ Afd Afd::minimizarDFA()
             estadoAtualMinimizado += estado;
         }
 
-        unordered_map<string, string> mapeamentoDestinos; // Mapeamento dos estados de destino
+        unordered_map<string, string> mapeamentoDestinos;
 
         for (const string &simbolo : afdMinimizado.alfabeto)
         {
