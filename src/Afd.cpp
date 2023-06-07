@@ -40,7 +40,7 @@ void Afd::lerTransicoes(const string &arquivo)
                 this->alfabeto.push_back(token);
                 valor.erase(0, token_pos + 1);
             }
-            alfabeto.push_back(valor);
+            this->alfabeto.push_back(valor);
         }
         else if (chave == "estados")
         {
@@ -96,7 +96,17 @@ void Afd::lerTransicoes(const string &arquivo)
     }
 
     file.close();
-    // preencherMatrizTransicoes();
+}
+
+void Afd::verificarValidadeAfd()
+{
+    // [] Não tenha estado inicial;
+
+    // [] Há mais de um estado inicial;
+
+    // [] Falta transições referentes a cada elemento do alfabeto(um estado sem transições já é uma situação levada em consideração aqui);
+
+    // [] Há mais de uma transição de um mesmo elemento do alfabeto;
 }
 
 bool Afd::verificarCadeia(const string &cadeia)
@@ -286,26 +296,41 @@ Afd Afd::minimizarDFA()
             {
                 if (!marcados[i][j])
                 {
-                    for (const string &simbolo : this->alfabeto)
+                    for (size_t k = 0; k < this->alfabeto.size(); k++)
                     {
                         const vector<pair<string, string>> &transicoesEstado1 = getTransicoes(this->estados[i]);
                         const vector<pair<string, string>> &transicoesEstado2 = getTransicoes(this->estados[j]);
 
                         // Verificar se os estados possuem transições para o símbolo atual
-                        if (!transicoesEstado1.empty() && !transicoesEstado2.empty())
+                        bool encontrouMarcado = false;
+                        for (const auto &transicao1 : transicoesEstado1)
                         {
-                            const string &proximoEstado1 = transicoesEstado1[0].first;
-                            const string &proximoEstado2 = transicoesEstado2[0].first;
-
-                            size_t index1 = distance(estados.begin(), find(estados.begin(), estados.end(), proximoEstado1));
-                            size_t index2 = distance(this->estados.begin(), find(this->estados.begin(), this->estados.end(), proximoEstado2));
-
-                            if (marcados[index1][index2])
+                            if (transicao1.second == this->alfabeto[k])
                             {
-                                marcados[i][j] = true;
-                                feito = false;
-                                break;
+                                for (const auto &transicao2 : transicoesEstado2)
+                                {
+                                    if (transicao2.second == this->alfabeto[k])
+                                    {
+                                        size_t index1 = distance(estados.begin(), find(estados.begin(), estados.end(), transicao1.first));
+                                        size_t index2 = distance(estados.begin(), find(estados.begin(), estados.end(), transicao2.first));
+
+                                        if (marcados[index1][index2])
+                                        {
+                                            marcados[i][j] = true;
+                                            encontrouMarcado = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (encontrouMarcado)
+                                {
+                                    break;
+                                }
                             }
+                        }
+                        if (encontrouMarcado)
+                        {
+                            break;
                         }
                     }
                 }
@@ -339,8 +364,8 @@ Afd Afd::minimizarDFA()
             }
 
             for (size_t j = i + 1; j < this->estados.size(); j++)
-            {
-                if (!visitado[j] && !marcados[j][i]) // Considera apenas o triângulo inferior
+            { // Considera apenas o triângulo inferior
+                if (!visitado[j] && !marcados[j][i])
                 {
                     colocarJuntou.push_back(this->estados[j]);
                     novoEstado += this->estados[j];

@@ -5,7 +5,7 @@ TARGET = minimizador
 CXX = g++
 
 # Flags de compilação
-CXXFLAGS = -std=c++14
+CXXFLAGS = -std=c++14 -Wall
 
 # Diretórios de código-fonte e objetos
 SRCDIR = src

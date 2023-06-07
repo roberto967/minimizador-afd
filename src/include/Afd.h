@@ -30,6 +30,7 @@ public:
 
     void lerTransicoes(const string &arquivo);
     bool verificarCadeia(const string &cadeia);
+    void verificarValidadeAfd();
 
     void criarImagem(const string arquivo_saida);
 
