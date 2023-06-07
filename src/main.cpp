@@ -8,7 +8,6 @@ int main()
         Afd automato;
 
         automato.lerTransicoes("input_AFD.txt");
-        cout << "alooo" << endl;
         automato.criarImagem("Afd_Original");
 
         // string cadeia;
