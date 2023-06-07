@@ -35,12 +35,12 @@ public:
     ~Afd();
 
     void lerTransicoes(const string &arquivo);
-    bool verificarCadeia(const string &cadeia);
+    string verificarCadeia(const string &cadeia);
     void verificarValidadeAfd();
 
     void criarImagem(const string arquivoSaida);
 
-    Afd minimizarDFA();
+    Afd minimizarAFD();
 
     const vector<pair<string, string>> &getTransicoes(const string &estado);
 
@@ -48,6 +48,7 @@ public:
     void imprimirMatrizMinimizacao(const vector<vector<bool>> marcados);
 
     void trimString(string &str);
+    void limparAutomato();
 };
 
 #endif

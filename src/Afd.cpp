@@ -102,6 +102,7 @@ void Afd::lerTransicoes(const string &arquivo)
 
     file.close();
     verificarValidadeAfd();
+    cout << "SUCESSO!" << endl;
 }
 
 void Afd::verificarValidadeAfd()
@@ -154,8 +155,27 @@ void Afd::verificarValidadeAfd()
     }
 }
 
-bool Afd::verificarCadeia(const string &cadeia)
+string Afd::verificarCadeia(const string &cadeiaParam)
 {
+    string cadeia = cadeiaParam;
+
+    trimString(cadeia);
+
+    if (alfabeto.empty() || estados.empty() || matrizTransicoes.empty())
+    {
+        throw runtime_error("Erro: Operacao invalida.");
+    }
+
+    if (finais.empty() && cadeia == "")
+    {
+        return "Cadeia aceita pelo automato.";
+    }
+
+    if (finais.empty() && cadeia != "")
+    {
+        return "Cadeia rejeitada pelo automato.";
+    }
+
     string estadoAtual = inicial;
 
     for (char simbolo : cadeia)
@@ -163,7 +183,6 @@ bool Afd::verificarCadeia(const string &cadeia)
         string simboloStr(1, simbolo);
         bool transicaoEncontrada = false;
 
-        // Verifica se o símbolo lido pertence ao alfabeto do AFD
         bool simboloPresente = false;
         for (const string &s : alfabeto)
         {
@@ -175,7 +194,7 @@ bool Afd::verificarCadeia(const string &cadeia)
         }
         if (!simboloPresente)
         {
-            return false;
+            return "Cadeia rejeitada pelo automato.";
         }
 
         // Procura por uma transição apropriada
@@ -192,7 +211,7 @@ bool Afd::verificarCadeia(const string &cadeia)
         // Se não houver transição para o símbolo lido, a cadeia é rejeitada
         if (!transicaoEncontrada)
         {
-            return false;
+            return "Cadeia rejeitada pelo automato.";
         }
     }
 
@@ -207,7 +226,14 @@ bool Afd::verificarCadeia(const string &cadeia)
         }
     }
 
-    return estadoFinalEncontrado;
+    if (estadoFinalEncontrado)
+    {
+        return "Cadeia aceita pelo automato.";
+    }
+    else
+    {
+        return "Cadeia rejeitada pelo automato.";
+    }
 }
 
 void Afd::criarImagem(const string arquivoSaida)
@@ -360,8 +386,13 @@ void Afd::imprimirMatrizMinimizacao(const vector<vector<bool>> marcados)
     }
 }
 
-Afd Afd::minimizarDFA()
+Afd Afd::minimizarAFD()
 {
+    if (alfabeto.empty() || estados.empty() || matrizTransicoes.empty())
+    {
+        throw runtime_error("Erro: Operacao invalida.");
+    }
+
     // Etapa 1: Crie os pares de todos os estados envolvidos
     vector<vector<bool>> marcados(this->estados.size(), vector<bool>(this->estados.size(), false));
 
@@ -580,4 +611,14 @@ void Afd::trimString(string &str)
 
     // Remove os espaços em branco do início
     str.erase(0, inicio);
+}
+
+void Afd::limparAutomato()
+{
+    this->alfabeto.clear();
+    this->estados.clear();
+    this->inicial.clear();
+    this->finais.clear();
+    this->transicoes.clear();
+    this->matrizTransicoes.clear();
 }
