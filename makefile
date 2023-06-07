@@ -11,27 +11,37 @@ CXXFLAGS = -std=c++14 -Wall
 SRCDIR = src
 OBJDIR = obj
 
-# Arquivos de código-fonte
+# Verifica o sistema operacional
+ifeq ($(OS),Windows_NT)
+	# Comandos e diretivas para o Windows
+	RM = del
+	EXECUTABLE_EXTENSION = .exe
+else
+	# Comandos e diretivas para o Linux
+	RM = rm -f
+	EXECUTABLE_EXTENSION =
+endif
+
+# Código-fonte
 SOURCES = $(wildcard $(SRCDIR)/*.cpp)
 
-# Arquivos objetos gerados
+# Objetos gerados
 OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(OBJDIR)/%.o)
 
-# Regra padrão (primeira a ser executada)
 all: $(TARGET)
 
-# Regra para compilar o executável
+# Compilar o executável
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJECTS)
-	./minimizador.exe
+	$(CXX) $(CXXFLAGS) -o $(TARGET)$(EXECUTABLE_EXTENSION) $(OBJECTS)
+	./$(TARGET)$(EXECUTABLE_EXTENSION)
 
-# Regra para compilar os objetos
+# Compilar os objetos
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-# Regra para limpar arquivos gerados no windows
+# Limpar arquivos gerados
 clean:
-	del $(OBJDIR)\*.o
-	del $(TARGET).exe
-	del output\*.dot
-	del output\*.png
+	$(RM) $(OBJDIR)/*.o
+	$(RM) $(TARGET)$(EXECUTABLE_EXTENSION)
+	$(RM) output/*.dot
+	$(RM) output/*.png
