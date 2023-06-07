@@ -71,6 +71,7 @@ void Afd::lerTransicoes(const string &arquivo)
                 this->finais.push_back(token);
                 valor.erase(0, token_pos + 1);
             }
+            trimString(valor);
             this->finais.push_back(valor);
         }
     }
@@ -393,42 +394,42 @@ Afd Afd::minimizarDFA()
     imprimirMatrizMinimizacao(marcados);
     cout << "==============================================" << endl;
 
-    // Etapa 4: Combine os pares não marcados em um único estado no DFA minimizado
-    Afd dfaMinimizado;
+    // Etapa 4: Combine os pares não marcados em um único estado no AFD minimizado
+    Afd afdMinimizado;
 
-    dfaMinimizado.alfabeto = this->alfabeto; // Copiando alfabeto para o afd minimizado
+    afdMinimizado.alfabeto = this->alfabeto; // Copiando alfabeto para o afd minimizado
 
     vector<bool> visitado(this->estados.size(), false);
 
-    vector<vector<string>> juntou;
+    vector<vector<string>> mNomesUnidos; // Cada linha representa o nome do estado
 
     for (size_t i = 0; i < this->estados.size(); i++)
     {
         if (!visitado[i])
         {
-            vector<string> colocarJuntou;
+            vector<string> vetorEstadosUnidos;
             string novoEstado = this->estados[i];
 
-            if (find(colocarJuntou.begin(), colocarJuntou.end(), novoEstado) == colocarJuntou.end())
+            if (find(vetorEstadosUnidos.begin(), vetorEstadosUnidos.end(), novoEstado) == vetorEstadosUnidos.end())
             {
-                colocarJuntou.push_back(novoEstado);
+                vetorEstadosUnidos.push_back(novoEstado);
             }
 
             for (size_t j = i + 1; j < this->estados.size(); j++)
             { // Considera apenas o triângulo inferior
                 if (!visitado[j] && !marcados[j][i])
                 {
-                    colocarJuntou.push_back(this->estados[j]);
+                    vetorEstadosUnidos.push_back(this->estados[j]);
                     novoEstado += this->estados[j];
                     visitado[j] = true;
                 }
             }
 
-            dfaMinimizado.estados.push_back(novoEstado);
+            afdMinimizado.estados.push_back(novoEstado);
 
             if (novoEstado.find(inicial) != string::npos)
             {
-                dfaMinimizado.inicial = novoEstado;
+                afdMinimizado.inicial = novoEstado;
             }
 
             for (const string &estadoFinal : this->finais)
@@ -439,16 +440,16 @@ Afd Afd::minimizarDFA()
                 }
                 if (novoEstado.find(estadoFinal) != string::npos)
                 {
-                    dfaMinimizado.finais.push_back(novoEstado);
+                    afdMinimizado.finais.push_back(novoEstado);
                     break;
                 }
             }
 
-            juntou.push_back(colocarJuntou);
+            mNomesUnidos.push_back(vetorEstadosUnidos);
         }
     }
 
-    for (const vector<string> &estadosJuntos : juntou)
+    for (const vector<string> &estadosJuntos : mNomesUnidos)
     {
         string estadoAtualOriginal = estadosJuntos[0];
         string estadoAtualMinimizado;
@@ -460,7 +461,7 @@ Afd Afd::minimizarDFA()
 
         unordered_map<string, string> mapeamentoDestinos; // Mapeamento dos estados de destino
 
-        for (const string &simbolo : dfaMinimizado.alfabeto)
+        for (const string &simbolo : afdMinimizado.alfabeto)
         {
             vector<pair<string, string>> transicoesOriginais = transicoes[estadoAtualOriginal];
             string estadoDestinoOriginal;
@@ -476,17 +477,17 @@ Afd Afd::minimizarDFA()
 
             string estadoDestinoMinimizado;
 
-            for (const vector<string> &outrosEstadosJuntos : juntou)
+            for (const vector<string> &outrosEstadosJuntos : mNomesUnidos)
             {
-                string linhaJuntou;
+                string linhaEstadosUnidos;
                 for (const string &estado : outrosEstadosJuntos)
                 {
-                    linhaJuntou += estado;
+                    linhaEstadosUnidos += estado;
                 }
 
-                if (linhaJuntou.find(estadoDestinoOriginal) != string::npos)
+                if (linhaEstadosUnidos.find(estadoDestinoOriginal) != string::npos)
                 {
-                    estadoDestinoMinimizado = linhaJuntou;
+                    estadoDestinoMinimizado = linhaEstadosUnidos;
                     break;
                 }
             }
@@ -497,18 +498,36 @@ Afd Afd::minimizarDFA()
         for (const auto &par : mapeamentoDestinos)
         {
             vector<string> transicaoMinimizada = {estadoAtualMinimizado, par.first, par.second};
-            dfaMinimizado.matrizTransicoes.push_back(transicaoMinimizada);
+            afdMinimizado.matrizTransicoes.push_back(transicaoMinimizada);
         }
     }
 
-    for (const vector<string> &transicao : dfaMinimizado.matrizTransicoes)
+    for (const vector<string> &transicao : afdMinimizado.matrizTransicoes)
     {
         string estadoAtual = transicao[0];
         string simbolo = transicao[1];
         string estadoDestino = transicao[2];
 
-        dfaMinimizado.transicoes[estadoAtual].push_back(make_pair(estadoDestino, simbolo));
+        afdMinimizado.transicoes[estadoAtual].push_back(make_pair(estadoDestino, simbolo));
     }
 
-    return dfaMinimizado;
+    return afdMinimizado;
+}
+
+void Afd::trimString(string &str)
+{
+    // Encontra o primeiro caractere não branco a partir do início
+    size_t inicio = str.find_first_not_of(" \t");
+    if (inicio == string::npos)
+    {
+        str.clear();
+        return;
+    }
+
+    size_t end = str.find_last_not_of(" \t");
+    // Remove os espaços em branco do final
+    str.erase(end + 1);
+
+    // Remove os espaços em branco do início
+    str.erase(0, inicio);
 }

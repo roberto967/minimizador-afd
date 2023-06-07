@@ -45,6 +45,8 @@ public:
 
     void imprimirMatrizTransicoes();
     void imprimirMatrizMinimizacao(const vector<vector<bool>> marcados);
+
+    void trimString(string &str);
 };
 
 #endif
