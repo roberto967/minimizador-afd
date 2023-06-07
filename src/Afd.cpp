@@ -55,6 +55,11 @@ void Afd::lerTransicoes(const string &arquivo)
         }
         else if (chave == "inicial")
         {
+            size_t comma_pos = valor.find(',');
+            if (comma_pos != string::npos)
+            {
+                throw runtime_error("Erro: Mais de um estado inicial declarado.");
+            }
             this->inicial = valor;
         }
         else if (chave == "finais")
@@ -91,22 +96,55 @@ void Afd::lerTransicoes(const string &arquivo)
 
         this->transicoes[estado_atual].push_back(make_pair(estado_destino, simbolo));
 
-        vector<string> transicao = {estado_atual, simbolo, estado_destino};
-        this->matrizTransicoes.push_back(transicao);
+        this->matrizTransicoes.push_back({estado_atual, simbolo, estado_destino});
     }
 
     file.close();
+    verificarValidadeAfd();
 }
 
 void Afd::verificarValidadeAfd()
 {
-    // [] Não tenha estado inicial;
+    // Verifica se há estado inicial
+    if (inicial.empty())
+    {
+        throw runtime_error("Erro: Nao ha estado inicial no AFD.");
+    }
 
-    // [] Há mais de um estado inicial;
+    // Verifica se todas as letras do alfabeto têm transições definidas para cada estado
+    for (const auto &estado : estados)
+    {
+        for (const auto &simbolo : alfabeto)
+        {
+            bool temTransicao = false;
+            for (const auto &transicao : transicoes[estado])
+            {
+                if (transicao.second == simbolo)
+                {
+                    temTransicao = true;
+                    break;
+                }
+            }
+            if (!temTransicao)
+            {
+                throw runtime_error("Erro: Falta transicao para o simbolo '" + simbolo + "' no estado '" + estado + "'.");
+            }
+        }
+    }
 
-    // [] Falta transições referentes a cada elemento do alfabeto(um estado sem transições já é uma situação levada em consideração aqui);
-
-    // [] Há mais de uma transição de um mesmo elemento do alfabeto;
+    // Verifica se há mais de uma transição para o mesmo símbolo em algum estado
+    for (const auto &estado : estados)
+    {
+        unordered_set<string> simb; // unordered_set -> Mantém valores únicos
+        for (const auto &transicao : transicoes[estado])
+        {
+            if (simb.count(transicao.second) > 0)
+            {
+                throw runtime_error("Erro: Ha mais de uma transicao para o simbolo '" + transicao.second + "' no estado '" + estado + "'.");
+            }
+            simb.insert(transicao.second);
+        }
+    }
 }
 
 bool Afd::verificarCadeia(const string &cadeia)
