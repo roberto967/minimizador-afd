@@ -38,6 +38,7 @@ public:
     const vector<pair<string, string>> &getTransicoes(const string &estado);
 
     void imprimirMatrizTransicoes();
+    void imprimirMatrizMinimizacao(const vector<vector<bool>> marcados);
 };
 
 #endif

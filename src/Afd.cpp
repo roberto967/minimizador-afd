@@ -1,5 +1,7 @@
 #include "./include/Afd.h"
 
+using namespace std;
+
 Afd::Afd()
 {
 }
@@ -35,7 +37,7 @@ void Afd::lerTransicoes(const string &arquivo)
             while ((token_pos = valor.find(',')) != string::npos)
             {
                 string token = valor.substr(0, token_pos);
-                alfabeto.push_back(token);
+                this->alfabeto.push_back(token);
                 valor.erase(0, token_pos + 1);
             }
             alfabeto.push_back(valor);
@@ -46,14 +48,14 @@ void Afd::lerTransicoes(const string &arquivo)
             while ((token_pos = valor.find(',')) != string::npos)
             {
                 string token = valor.substr(0, token_pos);
-                estados.push_back(token);
+                this->estados.push_back(token);
                 valor.erase(0, token_pos + 1);
             }
             estados.push_back(valor);
         }
         else if (chave == "inicial")
         {
-            inicial = valor;
+            this->inicial = valor;
         }
         else if (chave == "finais")
         {
@@ -61,10 +63,10 @@ void Afd::lerTransicoes(const string &arquivo)
             while ((token_pos = valor.find(',')) != string::npos)
             {
                 string token = valor.substr(0, token_pos);
-                finais.push_back(token);
+                this->finais.push_back(token);
                 valor.erase(0, token_pos + 1);
             }
-            finais.push_back(valor);
+            this->finais.push_back(valor);
         }
     }
 
@@ -87,10 +89,10 @@ void Afd::lerTransicoes(const string &arquivo)
         string estado_destino = tokens[1];
         string simbolo = tokens[2];
 
-        transicoes[estado_atual].push_back(make_pair(estado_destino, simbolo));
+        this->transicoes[estado_atual].push_back(make_pair(estado_destino, simbolo));
 
         vector<string> transicao = {estado_atual, simbolo, estado_destino};
-        matrizTransicoes.push_back(transicao);
+        this->matrizTransicoes.push_back(transicao);
     }
 
     file.close();
@@ -160,7 +162,7 @@ void Afd::criarImagem(const string arquivo_saida)
 
     // Configuração do estado final com círculo duplo
     file << "node [shape=circle]; ";
-    for (const string &estado : finais)
+    for (const string &estado : this->finais)
     {
         file << estado << " [peripheries=2]; "; // Define o estado final com círculo duplo
     }
@@ -168,10 +170,10 @@ void Afd::criarImagem(const string arquivo_saida)
 
     // Configuração do estado normal com círculo simples
     file << "node [shape=circle]; ";
-    for (const string &estado : estados)
+    for (const string &estado : this->estados)
     {
         bool eh_estado_final = false;
-        for (const string &estado_final : finais)
+        for (const string &estado_final : this->finais)
         {
             if (estado == estado_final)
             {
@@ -189,7 +191,7 @@ void Afd::criarImagem(const string arquivo_saida)
     file << "node [shape=none];" << endl;
 
     // Criação dos estados e transições
-    for (const string &estado : estados)
+    for (const string &estado : this->estados)
     {
         if (estado == inicial)
         {
@@ -197,7 +199,7 @@ void Afd::criarImagem(const string arquivo_saida)
             file << "start -> " << estado << ";" << endl;
         }
 
-        for (const pair<string, string> &transicao : transicoes[estado])
+        for (const pair<string, string> &transicao : this->transicoes[estado])
         {
             string estado_destino = transicao.first;
             string simbolo = transicao.second;
@@ -215,47 +217,59 @@ void Afd::criarImagem(const string arquivo_saida)
 
 const vector<pair<string, string>> &Afd::getTransicoes(const string &estado)
 {
-    return transicoes[estado];
+    return this->transicoes[estado];
+}
+
+void Afd::imprimirMatrizTransicoes()
+{
+    for (size_t i = 0; i < this->matrizTransicoes.size(); i++)
+    {
+        for (size_t j = 0; j < this->matrizTransicoes[i].size(); j++)
+        {
+            cout << this->matrizTransicoes[i][j] << " ";
+        }
+        cout << endl;
+    }
+}
+
+void Afd::imprimirMatrizMinimizacao(const vector<vector<bool>> marcados)
+{
+    cout << "   ";
+    for (const string &estado : this->estados)
+    {
+        cout << setw(3) << estado;
+    }
+    cout << "\n";
+
+    for (size_t i = 0; i < this->estados.size(); i++)
+    {
+        cout << setw(3) << this->estados[i];
+        for (size_t j = 0; j <= i; j++) // Considera apenas o triângulo inferior
+        {
+            cout << setw(3) << (marcados[i][j] ? "X" : " ");
+        }
+        cout << "\n";
+    }
 }
 
 Afd Afd::minimizarDFA()
 {
 
     // Etapa 1: Crie os pares de todos os estados envolvidos
-    vector<vector<bool>> marcados(estados.size(), vector<bool>(estados.size(), false));
+    vector<vector<bool>> marcados(this->estados.size(), vector<bool>(this->estados.size(), false));
 
     // Etapa 2: Marque todos os pares (Qa, Qb) onde Qa é final e Qb não é final
-    for (size_t i = 0; i < estados.size(); i++)
+    for (size_t i = 0; i < this->estados.size(); i++)
     {
-        for (size_t j = 0; j < estados.size(); j++)
+        for (size_t j = 0; j < this->estados.size(); j++)
         {
-            if ((find(finais.begin(), finais.end(), estados[i]) != finais.end() && find(finais.begin(), finais.end(), estados[j]) == finais.end()) ||
-                (find(finais.begin(), finais.end(), estados[i]) == finais.end() && find(finais.begin(), finais.end(), estados[j]) != finais.end()))
+            if ((find(this->finais.begin(), this->finais.end(), this->estados[i]) != this->finais.end() && find(this->finais.begin(), this->finais.end(), this->estados[j]) == this->finais.end()) ||
+                (find(this->finais.begin(), this->finais.end(), this->estados[i]) == this->finais.end() && find(this->finais.begin(), this->finais.end(), this->estados[j]) != this->finais.end()))
             {
                 marcados[i][j] = true;
             }
         }
     }
-
-    // Imprimir a matriz marcados com os estados na lateral usando a biblioteca iomanip pra espaçamento
-    cout << "   ";
-    for (const string &estado : estados)
-    {
-        cout << setw(3) << estado;
-    }
-    cout << "\n";
-
-    for (size_t i = 0; i < estados.size(); i++)
-    {
-        cout << setw(3) << estados[i];
-        for (size_t j = 0; j < estados.size(); j++)
-        {
-            cout << setw(3) << (marcados[i][j] ? "X" : " ");
-        }
-        cout << "\n";
-    }
-
-    cout << "=======================================" << endl;
 
     // Etapa 3: Repita até não serem feitas mais marcações
     bool feito = false;
@@ -263,16 +277,19 @@ Afd Afd::minimizarDFA()
     {
         feito = true;
 
-        for (size_t i = 0; i < estados.size(); i++)
+        cout << "__________Minimizando...___________" << endl;
+        imprimirMatrizMinimizacao(marcados);
+
+        for (size_t i = 0; i < this->estados.size(); i++)
         {
-            for (size_t j = 0; j < estados.size(); j++)
+            for (size_t j = 0; j < this->estados.size(); j++)
             {
                 if (!marcados[i][j])
                 {
-                    for (const string &simbolo : alfabeto)
+                    for (const string &simbolo : this->alfabeto)
                     {
-                        const vector<pair<string, string>> &transicoesEstado1 = getTransicoes(estados[i]);
-                        const vector<pair<string, string>> &transicoesEstado2 = getTransicoes(estados[j]);
+                        const vector<pair<string, string>> &transicoesEstado1 = getTransicoes(this->estados[i]);
+                        const vector<pair<string, string>> &transicoesEstado2 = getTransicoes(this->estados[j]);
 
                         // Verificar se os estados possuem transições para o símbolo atual
                         if (!transicoesEstado1.empty() && !transicoesEstado2.empty())
@@ -281,7 +298,7 @@ Afd Afd::minimizarDFA()
                             const string &proximoEstado2 = transicoesEstado2[0].first;
 
                             size_t index1 = distance(estados.begin(), find(estados.begin(), estados.end(), proximoEstado1));
-                            size_t index2 = distance(estados.begin(), find(estados.begin(), estados.end(), proximoEstado2));
+                            size_t index2 = distance(this->estados.begin(), find(this->estados.begin(), this->estados.end(), proximoEstado2));
 
                             if (marcados[index1][index2])
                             {
@@ -296,53 +313,37 @@ Afd Afd::minimizarDFA()
         }
     }
 
-    cout << "__________depois do passo 3___________" << endl;
-    cout << "   ";
-    for (const string &estado : estados)
-    {
-        cout << setw(3) << estado;
-    }
-    cout << "\n";
-
-    for (size_t i = 0; i < estados.size(); i++)
-    {
-        cout << setw(3) << estados[i];
-        for (size_t j = 0; j < estados.size(); j++)
-        {
-            cout << setw(3) << (marcados[i][j] ? "X" : " ");
-        }
-        cout << "\n";
-    }
+    cout << "=========== Tabela do minimizado =============" << endl;
+    imprimirMatrizMinimizacao(marcados);
+    cout << "==============================================" << endl;
 
     // Etapa 4: Combine os pares não marcados em um único estado no DFA minimizado
     Afd dfaMinimizado;
 
     dfaMinimizado.alfabeto = this->alfabeto; // Copiando alfabeto para o afd minimizado
-    
 
-    vector<bool> visitado(estados.size(), false);
+    vector<bool> visitado(this->estados.size(), false);
 
     vector<vector<string>> juntou;
 
-    for (size_t i = 0; i < estados.size(); i++)
+    for (size_t i = 0; i < this->estados.size(); i++)
     {
         if (!visitado[i])
         {
             vector<string> colocarJuntou;
-            string novoEstado = estados[i];
+            string novoEstado = this->estados[i];
 
             if (find(colocarJuntou.begin(), colocarJuntou.end(), novoEstado) == colocarJuntou.end())
             {
-                // O estado não está presente, adicionar ao vetor
                 colocarJuntou.push_back(novoEstado);
             }
 
-            for (size_t j = i + 1; j < estados.size(); j++)
+            for (size_t j = i + 1; j < this->estados.size(); j++)
             {
                 if (!visitado[j] && !marcados[j][i]) // Considera apenas o triângulo inferior
                 {
-                    colocarJuntou.push_back(estados[j]);
-                    novoEstado += estados[j];
+                    colocarJuntou.push_back(this->estados[j]);
+                    novoEstado += this->estados[j];
                     visitado[j] = true;
                 }
             }
@@ -354,7 +355,7 @@ Afd Afd::minimizarDFA()
                 dfaMinimizado.inicial = novoEstado;
             }
 
-            for (const string &estadoFinal : finais)
+            for (const string &estadoFinal : this->finais)
             {
                 if (novoEstado.find(estadoFinal) != string::npos)
                 {
@@ -429,20 +430,5 @@ Afd Afd::minimizarDFA()
         dfaMinimizado.transicoes[estadoAtual].push_back(make_pair(estadoDestino, simbolo));
     }
 
-    dfaMinimizado.imprimirMatrizTransicoes();
-
     return dfaMinimizado;
-}
-
-// Função para visualizar a matriz de transições
-void Afd::imprimirMatrizTransicoes()
-{
-    for (size_t i = 0; i < matrizTransicoes.size(); i++)
-    {
-        for (size_t j = 0; j < matrizTransicoes[i].size(); j++)
-        {
-            cout << matrizTransicoes[i][j] << " ";
-        }
-        cout << endl;
-    }
 }
