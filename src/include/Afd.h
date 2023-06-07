@@ -8,7 +8,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
-#include <unordered_map>
 #include <iomanip>
 
 using namespace std;
@@ -21,8 +20,14 @@ public:
     vector<string> estados;
     string inicial;
     vector<string> finais;
+    /*
+     *   Estrutura chave/valor para armazenar as transições
+     *   sendo armazenadas como ->
+     *   [estado_atual] - vetor de pares associados(estado_destino,simbolo)
+     */
     unordered_map<string, vector<pair<string, string>>> transicoes;
 
+    // Matriz -> estado_atual | simbolo | estado_destino
     vector<vector<string>> matrizTransicoes;
 
     Afd();
