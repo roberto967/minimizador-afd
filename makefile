@@ -41,7 +41,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 # Limpar arquivos gerados
 clean:
-	$(RM) $(OBJDIR)/*.o
+	$(RM) $(OBJDIR)\*.o
 	$(RM) $(TARGET)$(EXECUTABLE_EXTENSION)
-	$(RM) output/*.dot
-	$(RM) output/*.png
+	$(RM) output\*.png
